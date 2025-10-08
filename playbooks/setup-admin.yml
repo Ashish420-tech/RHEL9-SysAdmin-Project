@@ -1,0 +1,58 @@
+---
+- name: RHEL 9 Admin User Setup & SSH Hardening
+  hosts: localhost
+  become: yes
+
+  vars:
+    admin_user: "adminuser"
+    admin_password: "{{ 'YourPasswordHere' | password_hash('sha512') }}"
+    ssh_port: 2222  # change if you want a custom SSH port
+
+  tasks:
+    # 1️⃣ Create admin user
+    - name: Create admin user
+      ansible.builtin.user:
+        name: "{{ admin_user }}"
+        groups: wheel
+        append: yes
+        state: present
+        password: "{{ admin_password }}"
+
+    # 2️⃣ Passwordless sudo
+    - name: Allow passwordless sudo for admin user
+      ansible.builtin.copy:
+        dest: "/etc/sudoers.d/{{ admin_user }}"
+        content: "{{ admin_user }} ALL=(ALL) NOPASSWD:ALL"
+        owner: root
+        group: root
+        mode: '0440'
+
+    # 3️⃣ Harden SSH - disable root login
+    - name: Disable root login via SSH
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^PermitRootLogin'
+        line: 'PermitRootLogin no'
+      notify: restart ssh
+
+    # 4️⃣ Harden SSH - allow only admin user
+    - name: Allow only admin user via SSH
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^AllowUsers'
+        line: "AllowUsers {{ admin_user }}"
+      notify: restart ssh
+
+    # 5️⃣ Harden SSH - change SSH port
+    - name: Set custom SSH port
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^Port'
+        line: "Port {{ ssh_port }}"
+      notify: restart ssh
+
+  handlers:
+    - name: restart ssh
+      ansible.builtin.service:
+        name: sshd
+        state: restarted
