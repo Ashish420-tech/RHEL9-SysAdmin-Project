@@ -1,0 +1,69 @@
+---
+- name: RHEL 9 Web App Deployment with SSL
+  hosts: localhost
+  become: yes
+
+  vars:
+    web_user: apache
+    web_dir: /var/www/webapp
+    ssl_cert: /etc/pki/tls/certs/webapp.crt
+    ssl_key: /etc/pki/tls/private/webapp.key
+
+  tasks:
+    # Install Apache and SSL module
+    - name: Install Apache and mod_ssl
+      ansible.builtin.dnf:
+        name:
+          - httpd
+          - mod_ssl
+        state: present
+
+    # Create web directory
+    - name: Create web directory
+      ansible.builtin.file:
+        path: "{{ web_dir }}"
+        state: directory
+        owner: "{{ web_user }}"
+        group: "{{ web_user }}"
+        mode: '0755'
+
+    # Deploy sample HTML page
+    - name: Copy index.html
+      ansible.builtin.copy:
+        dest: "{{ web_dir }}/index.html"
+        content: "<h1>Welcome to RHEL 9 WebApp Project 3</h1>"
+        owner: "{{ web_user }}"
+        group: "{{ web_user }}"
+        mode: '0644'
+
+    # Generate self-signed SSL certificate
+    - name: Generate self-signed SSL certificate
+      ansible.builtin.openssl_certificate:
+        path: "{{ ssl_cert }}"
+        privatekey_path: "{{ ssl_key }}"
+        common_name: "localhost"
+        state: present
+
+    # Configure Firewall
+    - name: Allow HTTP and HTTPS in firewall
+      ansible.builtin.firewalld:
+        service: "{{ item }}"
+        permanent: yes
+        state: enabled
+        immediate: yes
+      loop:
+        - http
+        - https
+
+    # Enable & start services
+    - name: Ensure httpd is running and enabled
+      ansible.builtin.service:
+        name: httpd
+        state: started
+        enabled: yes
+
+    - name: Ensure firewalld is running and enabled
+      ansible.builtin.service:
+        name: firewalld
+        state: started
+        enabled: yes

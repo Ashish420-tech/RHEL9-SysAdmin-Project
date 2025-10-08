@@ -1,0 +1,45 @@
+---
+- name: Configure Secure Apache Web Server with SSL
+  hosts: localhost
+  become: yes
+  tasks:
+
+    - name: Ensure Apache and mod_ssl are installed
+      yum:
+        name:
+          - httpd
+          - mod_ssl
+        state: present
+
+    - name: Create custom DocumentRoot
+      file:
+        path: /var/www/webapp
+        state: directory
+        owner: apache
+        group: apache
+        mode: '0755'
+
+    - name: Create index.html file
+      copy:
+        dest: /var/www/webapp/index.html
+        content: "<h1>SSL Web Server Running Successfully on RHEL 9</h1>"
+
+    - name: Update DocumentRoot in ssl.conf
+      lineinfile:
+        path: /etc/httpd/conf.d/ssl.conf
+        regexp: '^#?DocumentRoot'
+        line: 'DocumentRoot "/var/www/webapp"'
+
+    - name: Enable HTTPS service in firewall
+      firewalld:
+        service: https
+        permanent: yes
+        state: enabled
+        immediate: yes
+
+    - name: Restart Apache service
+      service:
+        name: httpd
+        state: restarted
+        enabled: yes
+

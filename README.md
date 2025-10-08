@@ -28,4 +28,20 @@ curl http://localhost
 =======
 # RHEL9-SysAdmin-Project
 Red Hat Linux 9 Sysadmin Practice Project
+# 🧰 Project 3 – Secure Apache Web Server with SSL (RHEL 9)
+
+## 🔹 Objective
+Set up a secure HTTPS web server using Apache and mod_ssl with a custom DocumentRoot on RHEL 9.
+
+## 🔹 Tasks Performed
+- Installed Apache and mod_ssl
+- Created custom DocumentRoot `/var/www/webapp`
+- Configured SSL in `/etc/httpd/conf.d/ssl.conf`
+- Enabled HTTPS service in firewall
+- Restarted and verified Apache HTTPS service
+
+## 🔹 Validation
+```bash
+curl -k https://localhost
+
 >>>>>>> 4929ed12c9a104b8d3c5344c34246dd8690b3409
