@@ -25,3 +25,7 @@ systemctl enable --now httpd chronyd firewalld
 firewall-cmd --permanent --add-service=http
 firewall-cmd --reload
 curl http://localhost
+=======
+# RHEL9-SysAdmin-Project
+Red Hat Linux 9 Sysadmin Practice Project
+>>>>>>> 4929ed12c9a104b8d3c5344c34246dd8690b3409
