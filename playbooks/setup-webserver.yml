@@ -1,0 +1,63 @@
+
+---
+
+# **2️⃣ Ansible Playbook: `playbooks/setup-webserver.yml`**
+
+```yaml
+---
+- name: RHEL 9 Sysadmin Project - Setup Hostname, NTP, Apache
+  hosts: localhost
+  become: yes
+  tasks:
+    - name: Set hostname
+      ansible.builtin.hostname:
+        name: rhel-admin.localdomain
+
+    - name: Set timezone
+      ansible.builtin.command: timedatectl set-timezone Asia/Kolkata
+
+    - name: Install chrony
+      ansible.builtin.dnf:
+        name: chrony
+        state: present
+
+    - name: Enable and start chronyd
+      ansible.builtin.service:
+        name: chronyd
+        state: started
+        enabled: yes
+
+    - name: Install Apache
+      ansible.builtin.dnf:
+        name: httpd
+        state: present
+
+    - name: Enable and start Apache
+      ansible.builtin.service:
+        name: httpd
+        state: started
+        enabled: yes
+
+    - name: Create website folder
+      ansible.builtin.file:
+        path: /var/www/admin.local
+        state: directory
+
+    - name: Add index.html
+      ansible.builtin.copy:
+        dest: /var/www/admin.local/index.html
+        content: "<h1>Welcome to Admin Local</h1>"
+
+    - name: Set SELinux context
+      ansible.builtin.command: semanage fcontext -a -t httpd_sys_content_t "/var/www/admin.local(/.*)?"
+    - ansible.builtin.command: restorecon -Rv /var/www/admin.local
+
+    - name: Enable and start firewalld
+      ansible.builtin.service:
+        name: firewalld
+        state: started
+        enabled: yes
+
+    - name: Open HTTP port
+      ansible.builtin.command: firewall-cmd --permanent --add-service=http
+    - ansible.builtin.command: firewall-cmd --reload
